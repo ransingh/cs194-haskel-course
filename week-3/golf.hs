@@ -36,14 +36,26 @@ localMaxima (x:y:z:zs)
   | otherwise = localMaxima $ y:z:zs
   where maximum x y z = if y > x && y > z then True else False
 
+indicatePresence :: Maybe a -> Char
+indicatePresence (Just a) = '*'
+indicatePresence Nothing = ' '
 
-presenceMarker :: Maybe a -> Char
-presenceMarker (Just a) = '*'
-presenceMarker Nothing = ' '
-
-checkPresence :: [Integer] -> [Char]
-checkPresence xs = [presenceMarker $ elemIndex n xs | n <- [0..9]]
+checkAndIndicatePresence :: [Integer] -> [Char]
+checkAndIndicatePresence xs = [indicatePresence $ elemIndex n xs | n <- [0..9]]
 
 deleteAll :: [Integer] -> [Integer]
-deleteAll xs = map delete [0..9]
---histogram :: [Integer] -> String
+deleteAll xs = deleters xs
+  where deleters = foldr (.) id $ map delete [0..9]
+
+buildIndicators :: [Integer] -> [String]
+buildIndicators [] = [""]
+buildIndicators xs = [checkAndIndicatePresence xs] ++ buildIndicators (deleteAll xs)
+
+histogram :: [Integer] -> String
+histogram xs = foldl (\acc x -> x ++ "\n" ++ acc) "" $ buildIndicators xs
+
+baseLine :: String
+baseLine = "==========" ++ "\n" ++ "0123456789" ++ "\n"
+
+printHistogram :: [Integer] -> IO ()
+printHistogram xs = putStr (histogram xs ++ baseLine)
